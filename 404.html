@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELVT — YouTube Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0D0B09;--bg2:#151210;--bg3:#1C1916;--bg4:#24211E;--bg5:#2E2A26;
+--cream:#F5F0E8;--cream2:#E8E0D4;--cream3:#D4C9B8;
+--brown:#8B7355;--brown2:#A6896A;--brown3:#C4A882;
+--gold:#D4A853;--gold2:#E8C278;--gold3:#B8923F;
+--accent:#C8956E;
+--text:#F5F0E8;--text2:#B8AFA3;--text3:#7A7168;
+--danger:#C75050;--success:#5BA87A;--warn:#D4A853;
+--font-d:'Cormorant Garamond',serif;
+--font-b:'DM Sans',sans-serif;
+}
+html,body{height:100%;font-family:var(--font-b);background:var(--bg);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--brown);color:var(--cream)}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--brown);border-radius:1px}
+button{font-family:var(--font-b)}
+body::after{content:'';position:fixed;inset:0;z-index:99999;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* AUTH */
+#auth{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
+#auth.out{opacity:0;pointer-events:none;transform:scale(1.03)}
+.a-card{width:380px;background:var(--bg2);border:1px solid var(--bg4);padding:52px 40px;text-align:center;position:relative;overflow:hidden}
+.a-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--brown),transparent)}
+.a-logo{font-family:var(--font-d);font-size:36px;letter-spacing:8px;color:var(--cream);font-weight:300}
+.a-sub{font-size:10px;letter-spacing:4px;color:var(--text3);text-transform:uppercase;margin:6px 0 44px}
+.a-in{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--bg4);color:var(--cream);font-family:var(--font-b);font-size:13px;margin-bottom:12px;outline:none;transition:border .3s}
+.a-in:focus{border-color:var(--brown2)}
+.a-in::placeholder{color:var(--text3)}
+.a-btn{width:100%;padding:15px;background:var(--brown);border:none;color:var(--cream);font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s;margin-top:4px}
+.a-btn:hover{background:var(--brown2);letter-spacing:4px}
+.a-btn:active{transform:scale(.98)}
+.a-btn:disabled{opacity:.5;cursor:not-allowed}
+.a-err{color:var(--danger);font-size:11px;margin-top:12px;min-height:16px;transition:opacity .3s}
+.a-ok{color:var(--success);font-size:11px;margin-top:12px}
+.a-toggle{color:var(--text3);font-size:11px;margin-top:20px;cursor:pointer;transition:color .3s;letter-spacing:1px}
+.a-toggle:hover{color:var(--cream2)}
+.a-div{height:1px;background:linear-gradient(90deg,transparent,var(--bg4),transparent);margin:24px 0}
+.a-phase{display:none}.a-phase.on{display:block}
+
+/* APP SHELL */
+#app{display:none;height:100vh;flex-direction:column}
+#app.on{display:flex}
+.top{height:52px;background:var(--bg2);border-bottom:1px solid var(--bg4);display:flex;align-items:center;padding:0 20px;flex-shrink:0;position:relative;z-index:50}
+.top::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--bg4),transparent)}
+.t-logo{font-family:var(--font-d);font-size:18px;letter-spacing:5px;color:var(--cream);font-weight:300}
+.t-badge{font-size:8px;letter-spacing:2px;text-transform:uppercase;background:var(--brown);color:var(--cream);padding:3px 8px;margin-left:10px}
+.t-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.t-user{font-size:11px;color:var(--text3)}
+.t-out{font-size:10px;color:var(--text3);cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:color .3s;background:none;border:none}
+.t-out:hover{color:var(--danger)}
+.t-ham{display:none;background:none;border:none;color:var(--cream);cursor:pointer;padding:4px}
+.t-ham svg{width:20px;height:20px}
+.lay{display:flex;flex:1;overflow:hidden}
+.side{width:220px;background:var(--bg2);border-right:1px solid var(--bg4);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:transform .3s}
+.s-sec{padding:20px 14px 6px;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--text3)}
+.s-item{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:12px;color:var(--text3);cursor:pointer;transition:all .25s;border-left:2px solid transparent;letter-spacing:.3px}
+.s-item:hover{background:var(--bg3);color:var(--cream2)}
+.s-item.on{background:var(--bg3);color:var(--cream);border-left-color:var(--brown)}
+.s-item svg{width:15px;height:15px;flex-shrink:0;opacity:.6}
+.s-item.on svg{opacity:1}
+.s-foot{margin-top:auto;padding:14px;border-top:1px solid var(--bg4)}
+.s-stat{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:5px}
+.s-stat b{color:var(--gold);font-weight:400}
+.side-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40}
+.cnt{flex:1;overflow-y:auto;padding:28px 32px 60px;scroll-behavior:smooth}
+.pg{display:none;animation:fadeUp .35s ease}.pg.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* COMPONENTS */
+.pg-t{font-family:var(--font-d);font-size:34px;font-weight:300;color:var(--cream);line-height:1.2}
+.pg-s{font-size:12px;color:var(--text3);margin:6px 0 28px;line-height:1.6}
+.card{background:var(--bg2);border:1px solid var(--bg4);padding:22px;margin-bottom:14px;transition:border-color .3s}
+.card:hover{border-color:rgba(139,115,85,.3)}
+.card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.card-t{font-family:var(--font-d);font-size:19px;font-weight:400;color:var(--cream)}
+.badge{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;font-family:var(--font-b)}
+.b-hot{background:var(--danger);color:white}.b-rise{background:var(--gold);color:var(--bg)}.b-ok{background:var(--success);color:white}.b-blue{background:#4A8EC9;color:white}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.stat{background:var(--bg3);padding:18px;text-align:center}
+.stat-v{font-family:var(--font-d);font-size:30px;color:var(--gold);line-height:1.2}
+.stat-l{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+.tag{display:inline-block;padding:3px 9px;font-size:10px;background:var(--bg3);color:var(--text2);margin:2px;border:1px solid var(--bg4);transition:all .2s;cursor:default}
+.tag.sel{background:var(--brown);color:var(--cream);border-color:var(--brown)}
+.btn{padding:11px 22px;border:none;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .25s;text-transform:uppercase;font-family:var(--font-b)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.bp{background:var(--brown);color:var(--cream)}.bp:hover{background:var(--brown2)}
+.bs{background:transparent;border:1px solid var(--bg4);color:var(--text2)}.bs:hover{border-color:var(--brown);color:var(--cream)}
+.bg{background:var(--gold);color:var(--bg)}.bg:hover{background:var(--gold2)}
+.bsm{padding:7px 14px;font-size:10px}
+.inp{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--bg4);color:var(--cream);font-family:var(--font-b);font-size:13px;outline:none;transition:border .3s}
+.inp:focus{border-color:var(--brown2)}.inp::placeholder{color:var(--text3)}
+.divider{height:1px;background:var(--bg4);margin:20px 0}
+.pbar{height:3px;background:var(--bg4);overflow:hidden;margin-top:6px}
+.pfill{height:100%;background:linear-gradient(90deg,var(--brown),var(--gold));transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.cpbtn{padding:5px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;background:var(--bg3);border:1px solid var(--bg4);color:var(--text3);cursor:pointer;transition:all .2s;font-family:var(--font-b)}
+.cpbtn:hover{border-color:var(--brown);color:var(--cream)}
+.cpbtn.copied{border-color:var(--success);color:var(--success)}
+.dtbl{width:100%;border-collapse:collapse;font-size:12px}
+.dtbl th{text-align:left;padding:8px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--bg4);font-weight:500}
+.dtbl td{padding:8px 10px;border-bottom:1px solid rgba(36,33,30,.6);color:var(--text2);transition:all .2s}
+.dtbl tr:hover td{background:var(--bg3);color:var(--cream)}
+.tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--bg4);overflow-x:auto}
+.tab{padding:9px 18px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.tab:hover{color:var(--cream)}.tab.on{color:var(--cream);border-bottom-color:var(--brown)}
+.tc{display:none}.tc.on{display:block;animation:fadeUp .3s ease}
+.ai-load{display:flex;align-items:center;gap:12px;padding:18px;background:var(--bg3);border:1px solid var(--bg4)}
+.dots span{display:inline-block;width:5px;height:5px;background:var(--brown);margin:0 2px;border-radius:50%;animation:dot 1.4s infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1.2)}}
+.nc{background:var(--bg2);border:1px solid var(--bg4);padding:18px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.nc:hover{border-color:var(--brown);transform:translateY(-1px)}
+.nc.sel{border-color:var(--gold);box-shadow:0 0 30px rgba(212,168,83,.06)}
+.nc .n-rpm{font-family:var(--font-d);font-size:26px;color:var(--gold);line-height:1}
+.nc .n-name{font-size:13px;color:var(--cream);margin:8px 0 3px;font-weight:500}
+.nc .n-meta{font-size:10px;color:var(--text3)}
+.nc .n-sc{position:absolute;top:10px;right:10px}
+.br-sec{margin-bottom:18px}
+.br-lab{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--brown2);margin-bottom:6px}
+.br-con{background:var(--bg);border:1px solid var(--bg4);padding:14px;font-size:13px;line-height:1.7;color:var(--text2);white-space:pre-wrap}
+.gc{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--bg4);padding:20px 20px 20px 24px;position:relative;margin-bottom:14px}
+.gc::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:linear-gradient(180deg,var(--gold),var(--brown))}
+.gc-num{font-family:var(--font-d);font-size:44px;color:rgba(36,33,30,.8);position:absolute;top:6px;right:14px;line-height:1}
+.gc-cat{color:var(--gold);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:6px}
+.gc-title{color:var(--cream);font-family:var(--font-d);font-weight:400;font-size:17px;margin-bottom:8px}
+.gc-body{color:var(--text2);font-size:12px;line-height:1.7}
+.gc-stats{display:flex;gap:20px;margin-top:10px;font-size:11px}
+.gc-stats span{color:var(--text3)}.gc-stats b{color:var(--cream);font-weight:400}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.ch{font-size:9px;text-align:center;color:var(--text3);padding:6px;letter-spacing:1.5px;text-transform:uppercase}
+.cd{background:var(--bg3);padding:6px;min-height:56px;font-size:10px;border:1px solid transparent;transition:all .2s;position:relative;cursor:pointer}
+.cd:hover{border-color:rgba(139,115,85,.3)}
+.cd .dn{color:var(--text3);margin-bottom:3px;font-size:10px}
+.cd .ce{font-size:8px;padding:2px 4px;margin-bottom:1px;color:var(--cream);letter-spacing:.3px}
+.ce-main{background:var(--brown)}.ce-tut{background:var(--gold3)}.ce-short{background:var(--accent)}.ce-collab{background:#4A8EC9}
+.cd.today{border-color:var(--gold)}
+.saved{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--success);color:white;padding:8px 20px;font-size:11px;letter-spacing:1px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.saved.show{opacity:1}
+.akey{position:fixed;bottom:14px;left:14px;z-index:100;width:28px;height:28px;background:var(--bg3);border:1px solid var(--bg4);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.15;transition:all .4s}
+.akey:hover{opacity:.8;border-color:var(--brown)}
+.akey svg{width:12px;height:12px;color:var(--text3)}
+
+/* ADMIN MODE */
+.adm-bar{position:fixed;top:52px;left:0;right:0;height:32px;background:var(--gold);color:var(--bg);display:none;align-items:center;justify-content:center;font-size:10px;letter-spacing:2px;text-transform:uppercase;z-index:60;font-weight:600}
+.adm-bar.on{display:flex}
+body.admin .lay{margin-top:32px}
+body.admin .side{top:84px}
+body.admin .cnt{padding-top:16px}
+.adm-exit{background:var(--bg);color:var(--gold);border:none;padding:3px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;margin-left:16px;font-family:var(--font-b)}
+.adm-exit:hover{background:var(--bg2)}
+
+/* EDITABLE PHOTO SLOTS */
+.ph-slot{width:100%;aspect-ratio:1;background:var(--bg3);border:1px dashed var(--bg5);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;transition:all .3s}
+.ph-slot img{width:100%;height:100%;object-fit:cover}
+.ph-slot .ph-empty{text-align:center;color:var(--text3);font-size:10px;letter-spacing:1px}
+.ph-slot .ph-empty svg{display:block;margin:0 auto 6px;width:24px;height:24px;opacity:.3}
+body.admin .ph-slot{cursor:pointer;border-color:var(--gold)}
+body.admin .ph-slot:hover{border-color:var(--gold2);box-shadow:0 0 20px rgba(212,168,83,.1)}
+body.admin .ph-slot::after{content:'✎ EDIT';position:absolute;bottom:0;left:0;right:0;background:rgba(212,168,83,.9);color:var(--bg);text-align:center;font-size:8px;letter-spacing:2px;padding:4px;opacity:0;transition:opacity .2s}
+body.admin .ph-slot:hover::after{opacity:1}
+
+/* EDITABLE TEXT */
+body.admin .ed-text{outline:1px dashed var(--gold);outline-offset:4px;cursor:pointer;position:relative}
+body.admin .ed-text:hover{outline-color:var(--gold2)}
+body.admin .ed-text::after{content:'✎';position:absolute;top:-8px;right:-8px;background:var(--gold);color:var(--bg);width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+body.admin .ed-text:hover::after{opacity:1}
+
+/* TRUST SECTIONS */
+.trust-bar{display:flex;gap:20px;align-items:center;justify-content:center;padding:18px 20px;flex-wrap:wrap}
+.trust-logo{height:24px;opacity:.4;transition:opacity .3s;filter:grayscale(1) brightness(2)}
+.trust-logo:hover{opacity:.8}
+.trust-num{text-align:center}
+.trust-num .tn-v{font-family:var(--font-d);font-size:28px;color:var(--gold);line-height:1}
+.trust-num .tn-l{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+.testi{background:var(--bg3);padding:18px;border-left:2px solid var(--gold);position:relative}
+.testi-quote{color:var(--text2);font-size:12px;line-height:1.7;font-style:italic}
+.testi-who{display:flex;align-items:center;gap:10px;margin-top:12px}
+.testi-ava{width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--bg4);flex-shrink:0}
+.testi-ava img{width:100%;height:100%;object-fit:cover}
+.testi-name{font-size:11px;color:var(--cream)}
+.testi-role{font-size:10px;color:var(--text3)}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px}
+.feat-item{background:var(--bg3);padding:14px;text-align:center;transition:all .3s}
+.feat-item:hover{background:var(--bg4)}
+.feat-ico{font-size:20px;margin-bottom:6px}
+.feat-label{font-size:10px;color:var(--text3);letter-spacing:.5px}
+
+/* PHOTO GRID */
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ph-grid.ph-2{grid-template-columns:1fr 1fr}
+
+/* ADMIN MODAL */
+.adm-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998;display:none;align-items:center;justify-content:center}
+.adm-modal.on{display:flex}
+.adm-modal-card{background:var(--bg2);border:1px solid var(--bg4);padding:32px;width:400px;max-width:90vw;text-align:center}
+.adm-modal-card h3{font-family:var(--font-d);font-size:20px;color:var(--cream);font-weight:300;margin-bottom:16px}
+
+@media(max-width:768px){
+.side{position:fixed;left:0;top:52px;bottom:0;z-index:45;transform:translateX(-100%);width:240px}
+.side.open{transform:translateX(0)}.side-overlay.open{display:block}
+.t-ham{display:block}.cnt{padding:20px 16px 60px}
+.g2,.g3{grid-template-columns:1fr}.gc-num{font-size:32px}
+}
+@media(max-width:480px){.a-card{width:calc(100% - 32px);padding:40px 24px}.pg-t{font-size:26px}}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth">
+<div class="a-card">
+<div class="a-logo">ELVT</div>
+<div class="a-sub">YouTube Command Center</div>
+<div class="a-phase on" id="ph1">
+<input class="a-in" type="password" id="akey" placeholder="Access Key" autocomplete="off">
+<button class="a-btn" id="keyBtn">Enter</button>
+<div class="a-err" id="keyErr"></div>
+</div>
+<div class="a-phase" id="ph2">
+<input class="a-in" type="email" id="lEmail" placeholder="Email">
+<input class="a-in" type="password" id="lPass" placeholder="Password">
+<button class="a-btn" id="loginBtn">Sign In</button>
+<div class="a-err" id="lErr"></div>
+<div class="a-div"></div>
+<div class="a-toggle" id="toReg">Create Account →</div>
+</div>
+<div class="a-phase" id="ph3">
+<input class="a-in" type="email" id="rEmail" placeholder="Email">
+<input class="a-in" type="password" id="rPass" placeholder="Create Password">
+<input class="a-in" type="password" id="rConf" placeholder="Confirm Password">
+<button class="a-btn" id="regBtn">Create Account</button>
+<div class="a-err" id="rErr"></div>
+<div class="a-div"></div>
+<div class="a-toggle" id="toLog">← Back to Sign In</div>
+</div>
+</div>
+</div>
+
+<!-- ADMIN BAR -->
+<div class="adm-bar" id="admBar">◆ ADMIN MODE — Click photos or highlighted text to edit <button class="adm-exit" id="admExit">Exit Admin</button></div>
+
+<!-- ADMIN PIN MODAL -->
+<div class="adm-modal" id="admModal">
+<div class="adm-modal-card">
+<h3>Admin Access</h3>
+<input class="a-in" type="password" id="admPin" placeholder="Enter PIN" maxlength="4" autocomplete="off" style="text-align:center;letter-spacing:8px;font-size:18px">
+<button class="a-btn" id="admPinBtn" style="margin-top:8px">Unlock</button>
+<div class="a-err" id="admErr" style="margin-top:8px"></div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="top">
+<button class="t-ham" id="ham"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<div class="t-logo">ELVT</div>
+<span class="t-badge">Command Center</span>
+<div class="t-right">
+<span class="t-user" id="uName"></span>
+<button class="t-out" id="logoutBtn">Logout</button>
+</div>
+</div>
+<div class="lay">
+<div class="side-overlay" id="sOver"></div>
+<nav class="side" id="side">
+<div class="s-sec">Intelligence</div>
+<div class="s-item on" data-p="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</div>
+<div class="s-item" data-p="niche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Niche Discovery</div>
+<div class="s-item" data-p="seo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h6"/></svg>SEO & Keywords</div>
+<div class="s-sec">Production</div>
+<div class="s-item" data-p="brief"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>Content Briefs</div>
+<div class="s-item" data-p="cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Content Calendar</div>
+<div class="s-sec">Growth</div>
+<div class="s-item" data-p="guer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 19-9-9 19-2-8-8-2Z"/></svg>Guerrilla Playbook</div>
+<div class="s-item" data-p="auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Automation Hub</div>
+<div class="s-item" data-p="rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Revenue Tracker</div>
+<div class="s-foot">
+<div class="s-stat"><span>Goal</span><b>$20K /mo</b></div>
+<div class="s-stat"><span>Timeline</span><b>6 months</b></div>
+<div class="s-stat"><span>Storage</span><b id="dbStatus">Connecting...</b></div>
+</div>
+</nav>
+<main class="cnt" id="cnt">
+
+<!-- DASHBOARD -->
+<section class="pg on" id="p-dash">
+
+<!-- HERO SECTION WITH FOUNDER PHOTO -->
+<div class="card" style="border:none;background:linear-gradient(135deg,var(--bg2),var(--bg3));padding:0;overflow:hidden;margin-bottom:20px">
+<div style="display:grid;grid-template-columns:200px 1fr;gap:0">
+<div class="ph-slot" data-img="founder_hero" style="aspect-ratio:auto;min-height:220px">
+<div class="ph-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Founder Photo</div>
+</div>
+<div style="padding:28px 32px">
+<div class="pg-t">Command Center</div>
+<div class="pg-s" style="margin-bottom:14px">Your strategic partner for $20K/mo on YouTube — without selling your soul to the algorithm.</div>
+<div style="display:flex;gap:20px;flex-wrap:wrap">
+<div class="trust-num"><div class="tn-v" data-txt="stat_users" class="ed-text">800+</div><div class="tn-l">Community Members</div></div>
+<div class="trust-num"><div class="tn-v" data-txt="stat_award" class="ed-text">3×</div><div class="tn-l">SaaS Award Winner</div></div>
+<div class="trust-num"><div class="tn-v" data-txt="stat_partner" class="ed-text">Official</div><div class="tn-l">GoHighLevel Partner</div></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- AWARD BADGES & TRUST BAR -->
+<div class="card" style="padding:14px">
+<div class="trust-bar">
+<div style="text-align:center"><span class="badge b-rise" style="font-size:9px;padding:5px 12px">2× PLATINUM SAAS AWARD</span></div>
+<div style="text-align:center"><span class="badge b-rise" style="font-size:9px;padding:5px 12px;background:var(--cream);color:var(--bg)">1× DIAMOND SAAS AWARD</span></div>
+<div style="text-align:center"><span class="badge b-ok" style="font-size:9px;padding:5px 12px">GOHIGHLEVEL CERTIFIED</span></div>
+<div style="text-align:center"><span class="badge b-blue" style="font-size:9px;padding:5px 12px">DIGITAL ECOSYSTEM ARCHITECT</span></div>
+</div>
+</div>
+
+<!-- "AS FEATURED" PHOTOS — ADMIN EDITABLE -->
+<div class="card" style="margin-top:14px">
+<div class="card-h"><div class="card-t">Trusted By Influencers & Brands</div><span class="badge b-rise">Verified</span></div>
+<div class="ph-grid">
+<div class="ph-slot" data-img="influencer_1" style="aspect-ratio:4/3"><div class="ph-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>Influencer Photo 1</div></div>
+<div class="ph-slot" data-img="influencer_2" style="aspect-ratio:4/3"><div class="ph-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>Influencer Photo 2</div></div>
+<div class="ph-slot" data-img="influencer_3" style="aspect-ratio:4/3"><div class="ph-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>Influencer Photo 3</div></div>
+</div>
+</div>
+
+<!-- TESTIMONIALS — ADMIN EDITABLE -->
+<div class="g2" style="margin-top:14px">
+<div class="testi">
+<div class="testi-quote ed-text" data-txt="testi_1_quote">"This platform completely transformed how I approach YouTube content. The strategy is surgical and the tools actually work."</div>
+<div class="testi-who">
+<div class="testi-ava ph-slot" data-img="testi_1_ava" style="width:32px;height:32px;border-radius:50%;aspect-ratio:1;border:none"></div>
+<div><div class="testi-name ed-text" data-txt="testi_1_name">Creator Name</div><div class="testi-role ed-text" data-txt="testi_1_role">YouTube Creator · 50K Subscribers</div></div>
+</div>
+</div>
+<div class="testi">
+<div class="testi-quote ed-text" data-txt="testi_2_quote">"I went from zero to monetized in 4 months using this exact system. The guerrilla playbook alone is worth 10× the price."</div>
+<div class="testi-who">
+<div class="testi-ava ph-slot" data-img="testi_2_ava" style="width:32px;height:32px;border-radius:50%;aspect-ratio:1;border:none"></div>
+<div><div class="testi-name ed-text" data-txt="testi_2_name">Partner Name</div><div class="testi-role ed-text" data-txt="testi_2_role">Digital Entrepreneur · ELVT Partner</div></div>
+</div>
+</div>
+</div>
+
+<div class="g3" style="margin-top:20px">
+<div class="stat"><div class="stat-v">$20K</div><div class="stat-l">Monthly Target</div></div>
+<div class="stat"><div class="stat-v">3–4×</div><div class="stat-l">Posts Per Week</div></div>
+<div class="stat"><div class="stat-v">$10–15</div><div class="stat-l">Target RPM</div></div>
+</div>
+<div class="card" style="border-color:var(--brown);margin-top:14px">
+<div class="card-h"><div class="card-t">Your Philosophy, Encoded</div></div>
+<p class="ed-text" data-txt="philosophy" style="color:var(--text2);line-height:1.8;font-size:13px">"Use AI to make you a better wife, mother, inventor, creator, Christian — not to take your humanness away."<br><br>Every tool here amplifies YOUR voice, YOUR purpose. The AI researches, structures, and optimizes. The soul comes from you.</p>
+</div>
+
+<!-- FEATURES GRID -->
+<div class="card" style="margin-top:14px;padding:0;overflow:hidden">
+<div class="feat-grid">
+<div class="feat-item"><div class="feat-ico">◆</div><div class="feat-label">AI Content Briefs</div></div>
+<div class="feat-item"><div class="feat-ico">◇</div><div class="feat-label">SEO Intelligence</div></div>
+<div class="feat-item"><div class="feat-ico">▣</div><div class="feat-label">Niche Discovery</div></div>
+<div class="feat-item"><div class="feat-ico">◈</div><div class="feat-label">Growth Playbook</div></div>
+<div class="feat-item"><div class="feat-ico">▹</div><div class="feat-label">Auto Calendar</div></div>
+<div class="feat-item"><div class="feat-ico">◎</div><div class="feat-label">Revenue Tracking</div></div>
+</div>
+</div>
+
+<!-- FOUNDER STORY — WITH SIDE PHOTO -->
+<div class="card" style="margin-top:14px;border-color:var(--brown)">
+<div style="display:grid;grid-template-columns:1fr 140px;gap:20px;align-items:center">
+<div>
+<div style="color:var(--gold);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:8px">The Person Behind The Platform</div>
+<div class="card-t" style="margin-bottom:10px">Built by a Creator, For Creators</div>
+<p class="ed-text" data-txt="founder_bio" style="color:var(--text2);font-size:12px;line-height:1.8">As a faith-based entrepreneur, 3× SaaS award winner, and official GoHighLevel partner, I built this platform because I was tired of seeing creators burn out chasing algorithms. This system is what took me from side hustle to building software for celebrities — and it's the exact blueprint I'd follow if I started from zero today.</p>
+</div>
+<div class="ph-slot" data-img="founder_side" style="aspect-ratio:3/4"><div class="ph-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Your Photo</div></div>
+</div>
+</div>
+
+<div class="g2" style="margin-top:14px">
+<div class="card" style="cursor:pointer" onclick="go('niche')"><div class="card-t" style="margin-bottom:6px">→ Niche Discovery</div><p style="color:var(--text3);font-size:12px">Blue ocean niches with highest RPM and lowest saturation.</p></div>
+<div class="card" style="cursor:pointer" onclick="go('brief')"><div class="card-t" style="margin-bottom:6px">→ Content Briefs</div><p style="color:var(--text3);font-size:12px">AI-generated scripts, hooks, CTAs — finished by you.</p></div>
+<div class="card" style="cursor:pointer" onclick="go('guer')"><div class="card-t" style="margin-bottom:6px">→ Guerrilla Playbook</div><p style="color:var(--text3);font-size:12px">Distribution tactics that compound without daily posting.</p></div>
+<div class="card" style="cursor:pointer" onclick="go('rev')"><div class="card-t" style="margin-bottom:6px">→ Revenue Tracker</div><p style="color:var(--text3);font-size:12px">Month-by-month from $0 to $20K with diversified streams.</p></div>
+</div>
+<div class="card" style="margin-top:14px;border-color:var(--gold3)">
+<div class="card-h"><div class="card-t">The Math: $20K/mo in 6 Months</div><span class="badge b-rise">Proven Path</span></div>
+<div class="g3" style="margin-bottom:12px">
+<div style="text-align:center;padding:10px"><div style="font-family:var(--font-d);font-size:22px;color:var(--gold)">$8K</div><div style="font-size:10px;color:var(--text3)">Ad Revenue</div></div>
+<div style="text-align:center;padding:10px"><div style="font-family:var(--font-d);font-size:22px;color:var(--gold)">$7K</div><div style="font-size:10px;color:var(--text3)">Affiliate + Sponsors</div></div>
+<div style="text-align:center;padding:10px"><div style="font-family:var(--font-d);font-size:22px;color:var(--gold)">$5K</div><div style="font-size:10px;color:var(--text3)">Digital Products</div></div>
+</div>
+<div class="pbar"><div class="pfill" style="width:0%" id="dashProg"></div></div>
+</div>
+</section>
+
+<!-- NICHE DISCOVERY -->
+<section class="pg" id="p-niche">
+<div class="pg-t">Niche Discovery Engine</div>
+<div class="pg-s">Blue ocean detection — scored by RPM × growth ÷ saturation × alignment.</div>
+<div style="display:flex;gap:10px;margin-bottom:20px">
+<input class="inp" id="nicheQ" placeholder="Enter a topic to discover niches..." style="flex:1">
+<button class="btn bp" id="nicheBtn">Discover</button>
+</div>
+<div class="g3" id="nicheGrid"></div>
+</section>
+
+<!-- SEO -->
+<section class="pg" id="p-seo">
+<div class="pg-t">SEO & Keyword Intelligence</div>
+<div class="pg-s">Keyword data with competition analysis. Every tag, title, and description optimized.</div>
+<div style="display:flex;gap:10px;margin-bottom:20px">
+<input class="inp" id="seoQ" placeholder="Enter topic to generate keyword intelligence..." style="flex:1">
+<button class="btn bp" id="seoBtn">Analyze</button>
+</div>
+<div class="tabs" id="seoTabs">
+<div class="tab on" data-tc="seo1">Primary Keywords</div>
+<div class="tab" data-tc="seo2">Long-Tail</div>
+<div class="tab" data-tc="seo3">Tag Generator</div>
+<div class="tab" data-tc="seo4">Title Formulas</div>
+</div>
+<div class="tc on" id="tc-seo1"><table class="dtbl"><thead><tr><th>Keyword</th><th>Vol.</th><th>Competition</th><th>Difficulty</th><th>RPM</th></tr></thead><tbody id="kwTbl"></tbody></table></div>
+<div class="tc" id="tc-seo2"><table class="dtbl"><thead><tr><th>Long-Tail Keyword</th><th>Monthly</th><th>Difficulty</th></tr></thead><tbody id="ltTbl"></tbody></table></div>
+<div class="tc" id="tc-seo3"><div class="card"><div class="card-h"><div class="card-t">Generated Tags</div><button class="cpbtn" id="cpTags">Copy All</button></div><div id="tagCloud" style="line-height:2.2"></div></div></div>
+<div class="tc" id="tc-seo4"><div id="titleFormulas"></div></div>
+</section>
+
+<!-- BRIEFS -->
+<section class="pg" id="p-brief">
+<div class="pg-t">Content Brief Generator</div>
+<div class="pg-s">AI-powered briefs with hooks, scripts, CTAs, and thumbnail concepts. Saved to cloud.</div>
+<div class="card" style="margin-bottom:20px">
+<div style="display:flex;gap:10px">
+<input class="inp" id="briefQ" placeholder="Video topic (e.g., 'How I use AI to run my SaaS business')" style="flex:1">
+<button class="btn bg" id="briefBtn">Generate Brief</button>
+</div>
+</div>
+<div id="briefOut"></div>
+<div id="savedBriefs"></div>
+</section>
+
+<!-- CALENDAR -->
+<section class="pg" id="p-cal">
+<div class="pg-t">Content Calendar</div>
+<div class="pg-s">Strategic schedule — click any day to add events. Synced to cloud.</div>
+<div class="card">
+<div class="card-h">
+<div class="card-t" id="calTitle">March 2026</div>
+<div><button class="btn bsm bs" id="calPrev">← Prev</button> <button class="btn bsm bs" id="calNext">Next →</button></div>
+</div>
+<div class="cg"><div class="ch">Mon</div><div class="ch">Tue</div><div class="ch">Wed</div><div class="ch">Thu</div><div class="ch">Fri</div><div class="ch">Sat</div><div class="ch">Sun</div></div>
+<div class="cg" id="calGrid"></div>
+</div>
+<div class="g2" style="margin-top:14px">
+<div class="card"><div class="card-t" style="margin-bottom:10px">Posting Strategy</div><div style="color:var(--text2);font-size:12px;line-height:2"><b style="color:var(--gold)">Tuesday 2pm EST:</b> Main video (8-12 min)<br><b style="color:var(--gold)">Thursday 2pm EST:</b> Tutorial (6-10 min)<br><b style="color:var(--gold)">Saturday 10am EST:</b> Shorts batch (3-5)<br><b style="color:var(--brown)">Monthly:</b> 1 collaboration video</div></div>
+<div class="card"><div class="card-t" style="margin-bottom:10px">Weekly Batch Flow</div><div style="color:var(--text2);font-size:12px;line-height:2"><b style="color:var(--cream)">Sunday:</b> Research + generate briefs (1hr)<br><b style="color:var(--cream)">Monday:</b> Batch record 2-3 videos (2hrs)<br><b style="color:var(--cream)">Tuesday:</b> Edit + schedule + publish (1hr)<br><b style="color:var(--cream)">Rest of week:</b> Engage comments (15min/day)</div></div>
+</div>
+</section>
+
+<!-- GUERRILLA -->
+<section class="pg" id="p-guer">
+<div class="pg-t">Guerrilla Growth Playbook</div>
+<div class="pg-s">Rare distribution tactics that compound. From real operators, not courses.</div>
+<div id="guerList"></div>
+</section>
+
+<!-- AUTOMATION -->
+<section class="pg" id="p-auto">
+<div class="pg-t">Automation Hub</div>
+<div class="pg-s">Tools and workflows that make 3-4 posts/week feel like 1 day of work.</div>
+<div class="g2">
+<div class="card">
+<div style="color:var(--gold);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:10px">Free-Tier Stack</div>
+<div class="card-t" style="margin-bottom:14px">Production Tools</div>
+<table class="dtbl"><tbody>
+<tr><td><b style="color:var(--cream)">CapCut</b></td><td>Edit + auto-captions</td><td style="color:var(--success)">Free</td></tr>
+<tr><td><b style="color:var(--cream)">Canva</b></td><td>Thumbnails + graphics</td><td style="color:var(--success)">Free</td></tr>
+<tr><td><b style="color:var(--cream)">ElevenLabs</b></td><td>AI voiceover</td><td style="color:var(--success)">Free tier</td></tr>
+<tr><td><b style="color:var(--cream)">TubeBuddy</b></td><td>SEO + tags</td><td style="color:var(--success)">Free tier</td></tr>
+<tr><td><b style="color:var(--cream)">Opus Clip</b></td><td>Auto Shorts from long-form</td><td style="color:var(--success)">Free tier</td></tr>
+<tr><td><b style="color:var(--cream)">RapidTags</b></td><td>Tag generation</td><td style="color:var(--success)">Free</td></tr>
+<tr><td><b style="color:var(--cream)">YouTube Studio</b></td><td>Schedule + analytics</td><td style="color:var(--success)">Free</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div style="color:var(--gold);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:10px">8-Step Weekly Process</div>
+<div class="card-t" style="margin-bottom:14px">Batch Workflow</div>
+<div style="color:var(--text2);font-size:12px;line-height:2.2">
+<b style="color:var(--cream)">1.</b> Generate 3 content briefs here<br>
+<b style="color:var(--cream)">2.</b> Record all 3 in one sitting<br>
+<b style="color:var(--cream)">3.</b> Edit in CapCut → auto-captions → export<br>
+<b style="color:var(--cream)">4.</b> Opus Clip → 15+ Shorts automatically<br>
+<b style="color:var(--cream)">5.</b> Thumbnails in Canva (use templates)<br>
+<b style="color:var(--cream)">6.</b> Optimize tags with TubeBuddy<br>
+<b style="color:var(--cream)">7.</b> Schedule all in YouTube Studio<br>
+<b style="color:var(--cream)">8.</b> Write pinned comments + descriptions<br>
+<span style="color:var(--gold);font-size:11px;margin-top:8px;display:block">Total: ~4-5 hours/week for 3 videos + 15 Shorts</span>
+</div>
+</div>
+</div>
+<div class="card" style="margin-top:14px"><div class="card-t" style="margin-bottom:14px">Content Templates</div>
+<div class="g3">
+<div style="background:var(--bg);padding:14px;border-left:2px solid var(--gold)"><div style="font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">TEMPLATE A</div><div style="font-size:13px;color:var(--cream);margin-bottom:6px">The "How I" Video</div><div style="font-size:11px;color:var(--text3)">Hook → Story → Method → Results → CTA</div></div>
+<div style="background:var(--bg);padding:14px;border-left:2px solid var(--brown)"><div style="font-size:9px;color:var(--brown);letter-spacing:2px;margin-bottom:6px">TEMPLATE B</div><div style="font-size:13px;color:var(--cream);margin-bottom:6px">The "X Tools/Tips" Video</div><div style="font-size:11px;color:var(--text3)">Hook → List → Demo Each → Rank → CTA</div></div>
+<div style="background:var(--bg);padding:14px;border-left:2px solid var(--accent)"><div style="font-size:9px;color:var(--accent);letter-spacing:2px;margin-bottom:6px">TEMPLATE C</div><div style="font-size:13px;color:var(--cream);margin-bottom:6px">The "Stop Doing X" Video</div><div style="font-size:11px;color:var(--text3)">Contrarian Hook → Problem → Solution → CTA</div></div>
+</div></div>
+</section>
+
+<!-- REVENUE -->
+<section class="pg" id="p-rev">
+<div class="pg-t">Revenue Roadmap</div>
+<div class="pg-s">Month-by-month path from $0 to $20K with diversified streams.</div>
+<div class="card" style="overflow-x:auto">
+<table class="dtbl">
+<thead><tr><th>Mo</th><th>Focus</th><th>Videos</th><th>Views</th><th>Ads</th><th>Affiliate</th><th>Products</th><th>Total</th></tr></thead>
+<tbody>
+<tr><td><b style="color:var(--cream)">1</b></td><td>Foundation + first 12</td><td>12</td><td>5K</td><td style="color:var(--text3)">$65</td><td style="color:var(--text3)">$0</td><td style="color:var(--text3)">$0</td><td style="color:var(--gold)">$65</td></tr>
+<tr><td><b style="color:var(--cream)">2</b></td><td>SEO momentum + Shorts</td><td>14</td><td>25K</td><td>$325</td><td>$200</td><td style="color:var(--text3)">$0</td><td style="color:var(--gold)">$525</td></tr>
+<tr><td><b style="color:var(--cream)">3</b></td><td>Monetization + affiliate</td><td>14</td><td>80K</td><td>$1,040</td><td>$800</td><td>$500</td><td style="color:var(--gold)">$2,340</td></tr>
+<tr><td><b style="color:var(--cream)">4</b></td><td>Collabs + product launch</td><td>16</td><td>200K</td><td>$2,600</td><td>$2,000</td><td>$1,500</td><td style="color:var(--gold)">$6,100</td></tr>
+<tr><td><b style="color:var(--cream)">5</b></td><td>Scale + sponsors</td><td>16</td><td>400K</td><td>$5,200</td><td>$4,000</td><td>$3,000</td><td style="color:var(--gold)">$12,200</td></tr>
+<tr style="background:var(--bg3)"><td><b style="color:var(--gold)">6</b></td><td><b style="color:var(--gold)">TARGET HIT</b></td><td>16</td><td>600K+</td><td style="color:var(--gold)">$8,000</td><td style="color:var(--gold)">$7,000</td><td style="color:var(--gold)">$5,000</td><td style="color:var(--gold);font-size:15px"><b>$20,000</b></td></tr>
+</tbody></table>
+</div>
+<div class="card" style="margin-top:14px;border-color:var(--brown)"><div class="card-t" style="margin-bottom:14px">Revenue Diversification</div>
+<div class="g3">
+<div style="text-align:center;padding:14px;background:var(--bg)"><div style="font-family:var(--font-d);font-size:26px;color:var(--gold)">40%</div><div style="font-size:11px;color:var(--cream);margin:6px 0 3px">Ad Revenue</div><div style="font-size:10px;color:var(--text3)">$13 avg RPM</div></div>
+<div style="text-align:center;padding:14px;background:var(--bg)"><div style="font-family:var(--font-d);font-size:26px;color:var(--gold)">35%</div><div style="font-size:11px;color:var(--cream);margin:6px 0 3px">Affiliate + Sponsors</div><div style="font-size:10px;color:var(--text3)">SaaS programs + deals</div></div>
+<div style="text-align:center;padding:14px;background:var(--bg)"><div style="font-family:var(--font-d);font-size:26px;color:var(--gold)">25%</div><div style="font-size:11px;color:var(--cream);margin:6px 0 3px">Digital Products</div><div style="font-size:10px;color:var(--text3)">Templates + community</div></div>
+</div></div>
+<div class="card" style="margin-top:14px"><div class="card-t" style="margin-bottom:14px">High-Value Affiliate Programs</div>
+<table class="dtbl"><thead><tr><th>Program</th><th>Commission</th><th>Cookie</th><th>Fit</th></tr></thead><tbody>
+<tr><td><b style="color:var(--cream)">GoHighLevel</b></td><td>40% recurring</td><td>30 days</td><td style="color:var(--success)">Perfect</td></tr>
+<tr><td><b style="color:var(--cream)">Canva Pro</b></td><td>$36/referral</td><td>30 days</td><td style="color:var(--success)">High</td></tr>
+<tr><td><b style="color:var(--cream)">TubeBuddy</b></td><td>30% recurring</td><td>60 days</td><td style="color:var(--success)">Perfect</td></tr>
+<tr><td><b style="color:var(--cream)">ConvertKit</b></td><td>30% recurring</td><td>90 days</td><td style="color:var(--success)">High</td></tr>
+<tr><td><b style="color:var(--cream)">Teachable</b></td><td>30% recurring</td><td>90 days</td><td style="color:var(--success)">High</td></tr>
+</tbody></table></div>
+</section>
+
+</main>
+</div>
+</div>
+
+<div class="akey" id="aKeyBtn" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777Zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
+<div class="saved" id="saved">Saved</div>
+<input type="file" id="phUpload" accept="image/*" style="display:none">
+
+<script>
+// ════════════════════════════════════════════════════
+// SUPABASE CONFIG
+// ════════════════════════════════════════════════════
+const SUPA_URL='https://jajtyudbkyrqklbnaggm.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphanR5dWRia3lycWtsYm5hZ2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEwMTU5MzksImV4cCI6MjA4NjU5MTkzOX0.CIXkT6tBbjB5L-1FYECN9UzPLNJTg33hSImB7OONkgs';
+
+// Supabase REST helper
+const supa={
+  headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+  async q(table,method,params,body){
+    const url=`${SUPA_URL}/rest/v1/${table}${params?'?'+params:''}`;
+    const opts={method,headers:{...this.headers}};
+    if(body)opts.body=JSON.stringify(body);
+    if(method==='POST')opts.headers['Prefer']='return=representation';
+    if(method==='DELETE'||method==='PATCH')opts.headers['Prefer']='return=minimal';
+    try{const r=await fetch(url,opts);if(!r.ok){const e=await r.text();console.error('Supa error:',e);return null}if(method==='DELETE')return true;const t=await r.text();return t?JSON.parse(t):null}catch(e){console.error('Supa fetch:',e);return null}
+  },
+  get:(t,p)=>supa.q(t,'GET',p),
+  post:(t,b)=>supa.q(t,'POST',null,b),
+  del:(t,p)=>supa.q(t,'DELETE',p),
+  patch:(t,p,b)=>supa.q(t,'PATCH',p,b),
+};
+
+// ════════════════════════════════════════════════════
+// LOCAL CACHE (fallback + speed layer)
+// ════════════════════════════════════════════════════
+const LC={
+  get(k){try{return JSON.parse(localStorage.getItem('elvt_yt_'+k))}catch{return null}},
+  set(k,v){try{localStorage.setItem('elvt_yt_'+k,JSON.stringify(v))}catch{}},
+  del(k){localStorage.removeItem('elvt_yt_'+k)}
+};
+
+let ME=null; // current user {id, email}
+let DB_OK=false;
+
+function flash(msg){const s=document.getElementById('saved');s.textContent=msg||'Saved';s.classList.add('show');setTimeout(()=>s.classList.remove('show'),1800)}
+
+// Test Supabase connectivity
+async function testDB(){
+  try{
+    const r=await fetch(`${SUPA_URL}/rest/v1/yt_users?select=id&limit=1`,{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
+    DB_OK=r.ok;
+    document.getElementById('dbStatus').textContent=DB_OK?'☁️ Cloud':'Local';
+    document.getElementById('dbStatus').style.color=DB_OK?'var(--success)':'var(--warn)';
+    return DB_OK;
+  }catch{DB_OK=false;document.getElementById('dbStatus').textContent='Local';document.getElementById('dbStatus').style.color='var(--warn)';return false}
+}
+
+// ════════════════════════════════════════════════════
+// AUTH — Supabase-backed with local fallback
+// ════════════════════════════════════════════════════
+const KEYS=['elvtsocial','elvt'];
+function showPhase(n){document.querySelectorAll('.a-phase').forEach(p=>p.classList.remove('on'));document.getElementById('ph'+n).classList.add('on')}
+
+document.getElementById('keyBtn').onclick=async()=>{
+  const v=document.getElementById('akey').value.toLowerCase().trim();
+  if(!KEYS.includes(v))return document.getElementById('keyErr').textContent='Invalid access key.';
+  document.getElementById('keyErr').textContent='';
+  await testDB();
+  // Check if user has a local session
+  const sess=LC.get('session');
+  if(sess){
+    // Verify against Supabase or local
+    if(DB_OK){
+      const u=await supa.get('yt_users','email=eq.'+encodeURIComponent(sess)+'&select=id,email');
+      if(u&&u.length){ME={id:u[0].id,email:u[0].email};enter(ME.email);return}
+    }
+    const lu=LC.get('users')||{};
+    if(lu[sess]){ME={id:lu[sess].id||'local',email:sess};enter(sess);return}
+  }
+  showPhase(2);
+};
+document.getElementById('akey').onkeydown=e=>{if(e.key==='Enter')document.getElementById('keyBtn').click()};
+document.getElementById('toReg').onclick=()=>showPhase(3);
+document.getElementById('toLog').onclick=()=>showPhase(2);
+
+document.getElementById('regBtn').onclick=async()=>{
+  const em=document.getElementById('rEmail').value.trim().toLowerCase(),pw=document.getElementById('rPass').value,cf=document.getElementById('rConf').value;
+  const btn=document.getElementById('regBtn');
+  if(!em||!pw)return document.getElementById('rErr').textContent='All fields required.';
+  if(pw!==cf)return document.getElementById('rErr').textContent='Passwords do not match.';
+  if(pw.length<4)return document.getElementById('rErr').textContent='Password must be 4+ characters.';
+  btn.disabled=true;btn.textContent='Creating...';
+  document.getElementById('rErr').textContent='';
+  if(DB_OK){
+    // Check if exists
+    const ex=await supa.get('yt_users','email=eq.'+encodeURIComponent(em)+'&select=id');
+    if(ex&&ex.length){btn.disabled=false;btn.textContent='Create Account';return document.getElementById('rErr').textContent='Account exists. Sign in instead.'}
+    // Create
+    const u=await supa.post('yt_users',{email:em,pw:btoa(pw)});
+    if(!u||!u.length){btn.disabled=false;btn.textContent='Create Account';return document.getElementById('rErr').textContent='Error creating account. Try again.'}
+    ME={id:u[0].id,email:em};
+  }else{
+    const lu=LC.get('users')||{};
+    if(lu[em]){btn.disabled=false;btn.textContent='Create Account';return document.getElementById('rErr').textContent='Account exists. Sign in instead.'}
+    const fakeId='local-'+Date.now();
+    lu[em]={pw:btoa(pw),id:fakeId};LC.set('users',lu);
+    ME={id:fakeId,email:em};
+  }
+  LC.set('session',em);
+  btn.disabled=false;btn.textContent='Create Account';
+  enter(em);
+};
+document.getElementById('rConf').onkeydown=e=>{if(e.key==='Enter')document.getElementById('regBtn').click()};
+
+document.getElementById('loginBtn').onclick=async()=>{
+  const em=document.getElementById('lEmail').value.trim().toLowerCase(),pw=document.getElementById('lPass').value;
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.textContent='Signing in...';
+  document.getElementById('lErr').textContent='';
+  if(DB_OK){
+    const u=await supa.get('yt_users','email=eq.'+encodeURIComponent(em)+'&select=id,email,pw');
+    if(!u||!u.length){btn.disabled=false;btn.textContent='Sign In';return document.getElementById('lErr').textContent='Account not found.'}
+    if(atob(u[0].pw)!==pw){btn.disabled=false;btn.textContent='Sign In';return document.getElementById('lErr').textContent='Wrong password.'}
+    ME={id:u[0].id,email:em};
+  }else{
+    const lu=LC.get('users')||{};
+    if(!lu[em]){btn.disabled=false;btn.textContent='Sign In';return document.getElementById('lErr').textContent='Account not found.'}
+    if(atob(lu[em].pw)!==pw){btn.disabled=false;btn.textContent='Sign In';return document.getElementById('lErr').textContent='Wrong password.'}
+    ME={id:lu[em].id||'local',email:em};
+  }
+  LC.set('session',em);
+  btn.disabled=false;btn.textContent='Sign In';
+  enter(em);
+};
+document.getElementById('lPass').onkeydown=e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()};
+
+function enter(em){
+  document.getElementById('uName').textContent=em;
+  document.getElementById('auth').classList.add('out');
+  document.getElementById('app').classList.add('on');
+  initAll();
+  setTimeout(()=>{const p=document.getElementById('dashProg');if(p)p.style.width='100%'},400);
+}
+
+document.getElementById('logoutBtn').onclick=()=>{LC.del('session');ME=null;location.reload()};
+document.getElementById('aKeyBtn').onclick=()=>{document.getElementById('auth').classList.remove('out');showPhase(1)};
+
+// Auto-session
+window.addEventListener('DOMContentLoaded',async()=>{
+  const s=LC.get('session');
+  if(s){
+    await testDB();
+    if(DB_OK){
+      const u=await supa.get('yt_users','email=eq.'+encodeURIComponent(s)+'&select=id,email');
+      if(u&&u.length){ME={id:u[0].id,email:u[0].email};enter(ME.email);return}
+    }
+    const lu=LC.get('users')||{};
+    if(lu[s]){ME={id:lu[s].id||'local',email:s};enter(s);return}
+  }
+  document.getElementById('aKeyBtn').style.display='flex';
+});
+
+// ════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════
+function go(p){
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.s-item').forEach(x=>x.classList.remove('on'));
+  document.getElementById('p-'+p)?.classList.add('on');
+  document.querySelector(`.s-item[data-p="${p}"]`)?.classList.add('on');
+  document.getElementById('cnt').scrollTop=0;
+  document.getElementById('side').classList.remove('open');
+  document.getElementById('sOver').classList.remove('open');
+}
+document.querySelectorAll('.s-item').forEach(i=>i.onclick=()=>go(i.dataset.p));
+document.getElementById('ham').onclick=()=>{document.getElementById('side').classList.toggle('open');document.getElementById('sOver').classList.toggle('open')};
+document.getElementById('sOver').onclick=()=>{document.getElementById('side').classList.remove('open');document.getElementById('sOver').classList.remove('open')};
+document.querySelectorAll('.tabs').forEach(tb=>{tb.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{tb.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');t.closest('.pg').querySelectorAll('.tc').forEach(x=>x.classList.remove('on'));document.getElementById('tc-'+t.dataset.tc).classList.add('on')})});
+
+// ════════════════════════════════════════════════════
+// AI ENGINE
+// ════════════════════════════════════════════════════
+async function callAI(prompt){
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:prompt}]})});const d=await r.json();return d.content?.map(c=>c.text||'').join('')||''}catch{return ''}
+}
+
+// ════════════════════════════════════════════════════
+// NICHES
+// ════════════════════════════════════════════════════
+const NICHES=[
+  {id:'faith-biz',name:'Faith-Based Entrepreneurship',rpm:12.40,channels:'15K',growth:'12×',type:'Blue Ocean',tags:['purpose driven business','christian entrepreneur','kingdom business','faith and money']},
+  {id:'ai-tools',name:'AI Tools for Creators',rpm:14.20,channels:'25K',growth:'8×',type:'Trending',tags:['ai tools 2026','creator automation','ai workflow','best ai tools']},
+  {id:'eco-arch',name:'Digital Ecosystem Architecture',rpm:15.80,channels:'3K',growth:'21×',type:'Blue Ocean',tags:['saas builder','ecosystem design','digital infrastructure','tech architect']},
+  {id:'passive',name:'Passive Income Systems',rpm:13.50,channels:'40K',growth:'5×',type:'Rising',tags:['passive income 2026','automated revenue','money while you sleep']},
+  {id:'women-saas',name:'Women Building SaaS Empires',rpm:16.30,channels:'5K',growth:'18×',type:'Blue Ocean',tags:['women in saas','female founder','mom ceo','women tech']},
+  {id:'yt-auto',name:'YouTube Automation Mastery',rpm:11.88,channels:'20K',growth:'9×',type:'Trending',tags:['faceless youtube','youtube automation','content systems']},
+  {id:'eng-learn',name:'English Learning Content',rpm:11.88,channels:'10K',growth:'21×',type:'Blue Ocean',tags:['learn english','english podcast','english for beginners']},
+  {id:'sleep-sound',name:'Soundscapes for Sleep & Healing',rpm:10.92,channels:'20K',growth:'5.4×',type:'Rising',tags:['sleep sounds','healing frequency','ambient music']},
+  {id:'senior-health',name:'Senior Health & Longevity',rpm:6.17,channels:'10K',growth:'19×',type:'Blue Ocean',tags:['senior health','longevity tips','healthy aging']},
+];
+
+let userFavs=new Set();
+
+async function loadFavs(){
+  if(DB_OK&&ME){
+    const r=await supa.get('yt_favorites','user_id=eq.'+ME.id+'&select=niche_id');
+    if(r)r.forEach(f=>userFavs.add(f.niche_id));
+  }else{
+    (LC.get('fav_niches')||[]).forEach(f=>userFavs.add(f));
+  }
+}
+
+async function toggleFav(nicheId){
+  if(userFavs.has(nicheId)){
+    userFavs.delete(nicheId);
+    if(DB_OK&&ME)await supa.del('yt_favorites','user_id=eq.'+ME.id+'&niche_id=eq.'+encodeURIComponent(nicheId));
+    LC.set('fav_niches',[...userFavs]);
+    flash('Niche removed');
+  }else{
+    userFavs.add(nicheId);
+    if(DB_OK&&ME)await supa.post('yt_favorites',{user_id:ME.id,niche_id:nicheId});
+    LC.set('fav_niches',[...userFavs]);
+    flash('Niche saved');
+  }
+}
+
+function renderNiches(list){
+  const g=document.getElementById('nicheGrid');g.innerHTML='';
+  list.forEach(n=>{
+    const cls=n.type==='Blue Ocean'?'b-blue':n.type==='Trending'?'b-hot':'b-rise';
+    const d=document.createElement('div');
+    d.className='nc'+(userFavs.has(n.id)?' sel':'');
+    d.innerHTML=`<span class="badge ${cls} n-sc">${n.type}</span><div class="n-rpm">$${n.rpm.toFixed(2)}</div><div class="n-name">${n.name}</div><div class="n-meta">RPM · ${n.channels} channels · ${n.growth} growth</div><div style="margin-top:10px">${n.tags.map(t=>`<span class="tag sel">${t}</span>`).join('')}</div>`;
+    d.onclick=async()=>{await toggleFav(n.id);d.classList.toggle('sel')};
+    g.appendChild(d);
+  });
+}
+
+document.getElementById('nicheBtn').onclick=()=>{
+  const q=document.getElementById('nicheQ').value.trim();if(!q)return;
+  const custom={id:'custom-'+Date.now(),name:q,rpm:parseFloat((Math.random()*6+10).toFixed(2)),channels:Math.floor(Math.random()*20+2)+'K',growth:Math.floor(Math.random()*15+3)+'×',type:'Analyzing',tags:[q.toLowerCase(),q.toLowerCase()+' tutorial',q.toLowerCase()+' 2026']};
+  callAI(`Analyze YouTube niche: "${q}". Return ONLY JSON: {name,rpm(number 8-18),channels(string),growth(string),type("Blue Ocean"/"Trending"/"Rising"),tags(array of 4 strings)}`).then(r=>{
+    try{Object.assign(custom,JSON.parse(r.replace(/```json?|```/g,'').trim()))}catch{}
+    NICHES.unshift(custom);renderNiches(NICHES);flash('Niche analyzed');
+  }).catch(()=>{NICHES.unshift(custom);renderNiches(NICHES)});
+  document.getElementById('nicheQ').value='';
+};
+
+// ════════════════════════════════════════════════════
+// SEO & KEYWORDS
+// ════════════════════════════════════════════════════
+const KW_DATA=[
+  {kw:'faith based business',vol:'18,100',comp:'Low',diff:2,rpm:'$12.40'},
+  {kw:'christian entrepreneur',vol:'14,800',comp:'Low',diff:2,rpm:'$11.80'},
+  {kw:'ai tools for business 2026',vol:'33,200',comp:'Medium',diff:3,rpm:'$14.20'},
+  {kw:'passive income systems',vol:'22,500',comp:'Medium',diff:3,rpm:'$13.50'},
+  {kw:'how to build a saas',vol:'12,300',comp:'Low',diff:2,rpm:'$15.80'},
+  {kw:'digital products that sell',vol:'27,100',comp:'Medium',diff:3,rpm:'$12.90'},
+  {kw:'youtube automation faceless',vol:'19,400',comp:'Medium',diff:3,rpm:'$11.88'},
+  {kw:'purpose driven entrepreneur',vol:'8,200',comp:'Very Low',diff:1,rpm:'$13.10'},
+  {kw:'women in tech saas',vol:'6,800',comp:'Very Low',diff:1,rpm:'$16.30'},
+  {kw:'affiliate marketing automation',vol:'15,600',comp:'Low',diff:2,rpm:'$14.50'},
+];
+const LT_DATA=[
+  {kw:'how to start a faith based business from home 2026',vol:'4,200',diff:'Very Low'},
+  {kw:'best ai tools for content creators no experience',vol:'8,100',diff:'Low'},
+  {kw:'how to make passive income without showing face',vol:'6,300',diff:'Low'},
+  {kw:'build a saas product with no coding experience',vol:'5,500',diff:'Very Low'},
+  {kw:'christian woman entrepreneur making money online',vol:'3,800',diff:'Very Low'},
+  {kw:'youtube automation step by step beginner guide',vol:'7,200',diff:'Low'},
+  {kw:'digital products to sell online for beginners',vol:'12,400',diff:'Medium'},
+  {kw:'how to build affiliate program from scratch',vol:'4,600',diff:'Low'},
+];
+const TAGS=['faith based business','christian entrepreneur','purpose driven business','ai tools 2026','passive income online','digital products','make money youtube','saas builder','creator economy','online business 2026','affiliate marketing','youtube automation','faceless youtube channel','kingdom business','women in tech','build an empire','content creation tips','how to start youtube','business from home','recurring revenue'];
+const TITLES=[
+  {t:'I Built a $[X] Business Using Only AI Tools — Here\'s Exactly How',p:'Result + Method',ctr:'8-12%'},
+  {t:'The $20K/Month YouTube Strategy Nobody\'s Talking About (2026)',p:'Curiosity Gap + Year',ctr:'10-15%'},
+  {t:'Stop Making This Mistake: Why Your Digital Products Don\'t Sell',p:'Contrarian + Problem',ctr:'7-11%'},
+  {t:'7 AI Tools That Replace a $10K/Month Marketing Team',p:'Number + Value',ctr:'9-14%'},
+  {t:'How I Went from Broke to Building Software for Celebrities',p:'Transformation',ctr:'11-16%'},
+  {t:'I Automated My Entire YouTube Channel — Here\'s What Happened',p:'Experiment',ctr:'8-13%'},
+  {t:'The Exact System That Makes Me $[X] While I Sleep',p:'Specificity',ctr:'9-14%'},
+];
+
+function renderSEO(){
+  document.getElementById('kwTbl').innerHTML=KW_DATA.map(k=>{const d='●'.repeat(k.diff)+'○'.repeat(5-k.diff);const c=k.diff<=2?'var(--success)':k.diff<=3?'var(--warn)':'var(--danger)';return `<tr><td style="color:var(--cream)">${k.kw}</td><td>${k.vol}</td><td>${k.comp}</td><td style="color:${c}">${d}</td><td>${k.rpm}</td></tr>`}).join('');
+  document.getElementById('ltTbl').innerHTML=LT_DATA.map(k=>{const c=k.diff==='Medium'?'var(--warn)':'var(--success)';return `<tr><td style="color:var(--cream)">${k.kw}</td><td>${k.vol}</td><td style="color:${c}">${k.diff}</td></tr>`}).join('');
+  document.getElementById('tagCloud').innerHTML=TAGS.map(t=>`<span class="tag sel">${t}</span>`).join('');
+  document.getElementById('titleFormulas').innerHTML=TITLES.map(t=>`<div style="background:var(--bg);padding:12px 14px;border-left:2px solid var(--gold);margin-bottom:8px"><div style="font-size:13px;color:var(--cream)">${t.t}</div><div style="font-size:10px;color:var(--text3);margin-top:4px">${t.p} · CTR: ${t.ctr}</div></div>`).join('');
+}
+
+document.getElementById('seoBtn').onclick=()=>{
+  const q=document.getElementById('seoQ').value.trim();if(!q)return;
+  callAI(`YouTube SEO for "${q}". Return ONLY JSON: {keywords:[{kw,vol,comp,diff(1-5),rpm}](5), longtail:[{kw,vol,diff}](4), tags:[string](10), titles:[{t,p,ctr}](3)}`).then(r=>{
+    try{const j=JSON.parse(r.replace(/```json?|```/g,'').trim());if(j.keywords)j.keywords.forEach(k=>KW_DATA.unshift(k));if(j.longtail)j.longtail.forEach(k=>LT_DATA.unshift(k));if(j.tags)j.tags.forEach(t=>{if(!TAGS.includes(t))TAGS.unshift(t)});if(j.titles)j.titles.forEach(t=>TITLES.unshift(t));renderSEO();flash('Keywords generated')}catch{flash('Added to analysis')}
+  }).catch(()=>flash('Saved'));
+  document.getElementById('seoQ').value='';
+};
+
+document.getElementById('cpTags').onclick=()=>{navigator.clipboard.writeText(TAGS.join(',')).then(()=>{const b=document.getElementById('cpTags');b.classList.add('copied');b.textContent='Copied!';setTimeout(()=>{b.classList.remove('copied');b.textContent='Copy All'},2000)})};
+
+// ════════════════════════════════════════════════════
+// CONTENT BRIEFS — Supabase-backed
+// ════════════════════════════════════════════════════
+document.getElementById('briefBtn').onclick=async()=>{
+  const q=document.getElementById('briefQ').value.trim();if(!q)return;
+  const out=document.getElementById('briefOut');
+  out.innerHTML=`<div class="ai-load"><div class="dots"><span></span><span></span><span></span></div><span style="color:var(--text2);font-size:12px">Generating brief for: "${q}"</span></div>`;
+
+  const prompt=`You are a YouTube content strategist. Create a brief for: "${q}". Return ONLY JSON: {hook(string 2-3 sentences),outline(string with timestamps),cta_primary(string),cta_secondary(string),cta_tertiary(string),length(string),upload_time(string),thumbnail(string),description_kw(string comma-separated),tags(string comma-separated),human_notes(string with → bullets)}. Aligned with a faith-based female entrepreneur who values authenticity.`;
+
+  const aiResult=await callAI(prompt);
+  let brief;
+  try{brief=JSON.parse(aiResult.replace(/```json?|```/g,'').trim())}catch{
+    brief={hook:`"What if everything you've been taught about ${q.toLowerCase()} is backwards? I spent 6 months figuring this out. Here's the truth."`,outline:`INTRO (0:00-0:30): Personal hook\nACT 1 (0:30-3:00): The problem\nACT 2 (3:00-6:00): Your solution step by step\nACT 3 (6:00-8:00): Results\nCLOSE (8:00-10:00): CTA + encouragement`,cta_primary:'"Drop your biggest takeaway in the comments."',cta_secondary:'"Free resource in description — grab it."',cta_tertiary:'"Want this done for you? Link below."',length:'8-12 min',upload_time:'Tue/Thu 2pm EST',thumbnail:`Split screen — you left, key result right. High contrast.`,description_kw:`${q.toLowerCase()}, ${q.toLowerCase()} 2026, how to ${q.toLowerCase()}`,tags:`${q.toLowerCase()},${q.toLowerCase()} 2026,${q.toLowerCase()} tips`,human_notes:`→ Open with YOUR real story\n→ Include one moment of vulnerability\n→ Reference your faith naturally\n→ Show real screenshots\n→ Close like talking to a friend`};
+  }
+
+  // Save to Supabase + local
+  if(DB_OK&&ME){
+    await supa.post('yt_briefs',{user_id:ME.id,topic:q,brief_data:brief});
+  }
+  const local=LC.get('briefs')||[];local.unshift({topic:q,brief,ts:Date.now()});LC.set('briefs',local);
+
+  renderBrief(q,brief);
+  await renderSavedBriefs();
+  document.getElementById('briefQ').value='';
+  flash('Brief saved to cloud');
+};
+
+function renderBrief(topic,b){
+  document.getElementById('briefOut').innerHTML=`
+  <div class="card" style="border-color:var(--gold3)">
+    <div class="card-h"><div class="card-t">${topic}</div><div><button class="cpbtn" onclick="copyEl(this.closest('.card'))">Copy All</button> <button class="cpbtn" onclick="exportBrief('${encodeURIComponent(topic)}')">Export TXT</button></div></div>
+    <div class="br-sec"><div class="br-lab">Hook — First 8 Seconds</div><div class="br-con">${b.hook||''}</div></div>
+    <div class="br-sec"><div class="br-lab">Script Outline</div><div class="br-con">${b.outline||''}</div></div>
+    <div class="br-sec"><div class="br-lab">CTA Options</div><div class="br-con">PRIMARY: ${b.cta_primary||''}\n\nSECONDARY: ${b.cta_secondary||''}\n\nTERTIARY: ${b.cta_tertiary||''}</div></div>
+    <div class="br-sec"><div class="br-lab">Specs</div><div class="br-con">Length: ${b.length||''}\nUpload: ${b.upload_time||''}\nThumbnail: ${b.thumbnail||''}\nKeywords: ${b.description_kw||''}</div></div>
+    <div class="br-sec"><div class="br-lab">Humanization Notes</div><div class="br-con">${b.human_notes||''}</div></div>
+    <div class="br-sec"><div class="br-lab">Tags</div><div class="br-con" style="cursor:pointer" onclick="navigator.clipboard.writeText(this.textContent);flash('Tags copied!')">${b.tags||''}</div></div>
+  </div>`;
+}
+
+async function renderSavedBriefs(){
+  let briefs=[];
+  if(DB_OK&&ME){
+    const r=await supa.get('yt_briefs','user_id=eq.'+ME.id+'&select=topic,brief_data,created_at&order=created_at.desc&limit=20');
+    if(r)briefs=r.map(b=>({topic:b.topic,brief:b.brief_data,ts:b.created_at}));
+  }
+  if(!briefs.length)briefs=LC.get('briefs')||[];
+  if(!briefs.length)return;
+  const el=document.getElementById('savedBriefs');
+  el.innerHTML=`<div class="divider"></div><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Saved Briefs (${briefs.length}) ${DB_OK?'☁️':''}</div>`;
+  briefs.slice(0,15).forEach(s=>{
+    const d=document.createElement('div');d.className='card';d.style.padding='14px';d.style.cursor='pointer';
+    d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><span style="color:var(--cream);font-size:13px">${s.topic}</span><span style="font-size:10px;color:var(--text3)">${new Date(s.ts).toLocaleDateString()}</span></div>`;
+    d.onclick=()=>renderBrief(s.topic,s.brief);
+    el.appendChild(d);
+  });
+}
+
+function copyEl(el){navigator.clipboard.writeText(el.innerText).then(()=>flash('Copied!'))}
+function exportBrief(topicEnc){
+  const topic=decodeURIComponent(topicEnc);
+  const local=LC.get('briefs')||[];const b=local.find(s=>s.topic===topic);if(!b)return;
+  const txt=`ELVT YOUTUBE COMMAND CENTER\nContent Brief: ${topic}\nGenerated: ${new Date().toLocaleDateString()}\n${'═'.repeat(50)}\n\nHOOK:\n${b.brief.hook}\n\nOUTLINE:\n${b.brief.outline}\n\nCTAs:\nPrimary: ${b.brief.cta_primary}\nSecondary: ${b.brief.cta_secondary}\nTertiary: ${b.brief.cta_tertiary}\n\nSPECS:\nLength: ${b.brief.length}\nUpload: ${b.brief.upload_time}\nThumbnail: ${b.brief.thumbnail}\nKeywords: ${b.brief.description_kw}\n\nHUMANIZATION:\n${b.brief.human_notes}\n\nTAGS:\n${b.brief.tags}`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));a.download=`ELVT-Brief-${topic.replace(/[^a-z0-9]/gi,'-')}.txt`;a.click();flash('Exported!');
+}
+
+// ════════════════════════════════════════════════════
+// CALENDAR — Supabase-backed
+// ════════════════════════════════════════════════════
+let calMonth=2,calYear=2026;
+const MNAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let calEvents={};
+
+async function loadCalEvents(){
+  calEvents={};
+  if(DB_OK&&ME){
+    const r=await supa.get('yt_calendar','user_id=eq.'+ME.id+`&yr=eq.${calYear}&mo=eq.${calMonth}&select=dy,event`);
+    if(r)r.forEach(e=>{if(!calEvents[e.dy])calEvents[e.dy]=[];calEvents[e.dy].push(e.event)});
+  }
+  const lc=LC.get('cal_'+calYear+'_'+calMonth)||{};
+  Object.entries(lc).forEach(([d,evts])=>{if(!calEvents[d])calEvents[d]=evts});
+}
+
+async function renderCal(){
+  await loadCalEvents();
+  document.getElementById('calTitle').textContent=`${MNAMES[calMonth]} ${calYear}`;
+  const g=document.getElementById('calGrid');g.innerHTML='';
+  const first=new Date(calYear,calMonth,1);
+  const lastDay=new Date(calYear,calMonth+1,0).getDate();
+  let startDay=first.getDay()-1;if(startDay<0)startDay=6;
+  const today=new Date();
+
+  for(let i=0;i<startDay;i++){const e=document.createElement('div');e.className='cd';e.style.opacity='.3';g.appendChild(e)}
+  for(let d=1;d<=lastDay;d++){
+    const dt=new Date(calYear,calMonth,d);
+    const dow=dt.getDay();const isToday=dt.toDateString()===today.toDateString();
+    let events='';
+    if(dow===2)events+=`<div class="ce ce-main">Main Video</div>`;
+    if(dow===4)events+=`<div class="ce ce-tut">Tutorial</div>`;
+    if(dow===6)events+=`<div class="ce ce-short">Shorts Batch</div>`;
+    if(calEvents[d])calEvents[d].forEach(e=>events+=`<div class="ce" style="background:var(--accent)">${e}</div>`);
+
+    const cell=document.createElement('div');
+    cell.className='cd'+(isToday?' today':'');
+    cell.innerHTML=`<div class="dn">${d}</div>${events}`;
+    cell.onclick=async()=>{
+      const note=prompt(`Add event for ${MNAMES[calMonth]} ${d}:`);
+      if(note){
+        if(DB_OK&&ME)await supa.post('yt_calendar',{user_id:ME.id,yr:calYear,mo:calMonth,dy:d,event:note});
+        const lc=LC.get('cal_'+calYear+'_'+calMonth)||{};if(!lc[d])lc[d]=[];lc[d].push(note);LC.set('cal_'+calYear+'_'+calMonth,lc);
+        renderCal();flash('Event saved to cloud');
+      }
+    };
+    g.appendChild(cell);
+  }
+}
+
+document.getElementById('calPrev').onclick=()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--}renderCal()};
+document.getElementById('calNext').onclick=()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++}renderCal()};
+
+// ════════════════════════════════════════════════════
+// GUERRILLA
+// ════════════════════════════════════════════════════
+const GUER=[
+  {cat:'The Comment Magnet',title:'Strategic commenting on 10 videos daily — before they go viral.',body:'Find channels with 1K-50K subs. Leave genuinely valuable comments within the first hour of upload. YouTube shows early commenters to other viewers. Your name becomes visible to their entire audience.',time:'15 min/day',impact:'500-2K impressions/day'},
+  {cat:'The Shorts Trojan Horse',title:'Repurpose every long-form video into 5-8 Shorts that funnel back.',body:'Each long-form video has 5-8 "micro-moments." Extract each into a 30-60s Short using Opus Clip. End each with "Full breakdown on my channel." Shorts get 10-50× the reach.',time:'30 min/video',impact:'5-20K views/batch'},
+  {cat:'The Authority Stack',title:'Answer questions on Reddit, Quora, and Facebook Groups with video links.',body:'Find 5 active communities. When someone asks a question your video answers, give a 3-sentence answer THEN link. Builds authority AND drives targeted traffic.',time:'20 min/day',impact:'200-1K targeted/week'},
+  {cat:'The Collaboration Chain',title:'Guest on podcasts and small channels in adjacent niches.',body:'Reach out to 5 channels per week in adjacent niches. Offer value-add collaboration. Start with channels your size. One viral collab = 1K-5K subs overnight.',time:'2 hrs/week',impact:'1-5K new subs/month'},
+  {cat:'The SEO Parasite Play',title:'Rank your YouTube videos on Google — not just YouTube search.',body:'Google shows video results for "how to" queries. Target keywords that trigger video carousels. Write 300+ word descriptions. Add timestamps. Embed on a blog post.',time:'10 min/video',impact:'30-50% more discovery'},
+  {cat:'The Pinned Comment Funnel',title:'Turn every video into a lead generation machine.',body:'Pin: "🔥 I put together [free resource] for anyone serious about [topic]. Drop \'READY\' below." Boosts engagement, builds email list, creates relationship.',time:'2 min/video',impact:'5-15% comment conversion'},
+  {cat:'The Evergreen Relaunch',title:'Re-upload your best videos every 6 months with "[YEAR] Edition."',body:'Re-record with updated info. YouTube treats it as fresh content but the topic is proven. Old video still ranks AND new one captures freshness.',time:'1 video/month',impact:'80% of original day 1'},
+  {cat:'The Thumbnail A/B Test',title:'Change thumbnails on underperforming videos after 48 hours.',body:'If below 4% CTR after 48hrs, swap. Test 2-3 variations. One change can revive a dead video. Keep a swipe file of competitor thumbnails.',time:'5 min/video',impact:'2-3× CTR improvement'},
+];
+
+function renderGuer(){
+  document.getElementById('guerList').innerHTML=GUER.map((g,i)=>`<div class="gc"><div class="gc-num">${String(i+1).padStart(2,'0')}</div><div class="gc-cat">${g.cat}</div><div class="gc-title">${g.title}</div><div class="gc-body">${g.body}</div><div class="gc-stats"><span>Time: <b>${g.time}</b></span><span>Impact: <b style="color:var(--success)">${g.impact}</b></span></div></div>`).join('');
+}
+
+// ════════════════════════════════════════════════════
+// ADMIN MODE — PIN: 1991
+// ════════════════════════════════════════════════════
+let ADMIN=false;
+const ADMIN_PIN='1991';
+
+// Admin key click → show PIN modal
+document.getElementById('aKeyBtn').onclick=()=>{
+  if(!document.getElementById('app').classList.contains('on')){
+    document.getElementById('auth').classList.remove('out');showPhase(1);return;
+  }
+  document.getElementById('admModal').classList.add('on');
+  document.getElementById('admPin').value='';
+  document.getElementById('admErr').textContent='';
+  setTimeout(()=>document.getElementById('admPin').focus(),100);
+};
+
+document.getElementById('admPinBtn').onclick=()=>{
+  if(document.getElementById('admPin').value===ADMIN_PIN){
+    ADMIN=true;
+    document.body.classList.add('admin');
+    document.getElementById('admBar').classList.add('on');
+    document.getElementById('admModal').classList.remove('on');
+    flash('Admin mode activated');
+    bindAdminEditing();
+  }else{
+    document.getElementById('admErr').textContent='Invalid PIN.';
+  }
+};
+document.getElementById('admPin').onkeydown=e=>{if(e.key==='Enter')document.getElementById('admPinBtn').click()};
+// Close modal on outside click
+document.getElementById('admModal').onclick=e=>{if(e.target===document.getElementById('admModal'))document.getElementById('admModal').classList.remove('on')};
+
+document.getElementById('admExit').onclick=()=>{
+  ADMIN=false;
+  document.body.classList.remove('admin');
+  document.getElementById('admBar').classList.remove('on');
+  flash('Admin mode deactivated');
+};
+
+// ════════════════════════════════════════════════════
+// ADMIN: Photo Upload System
+// ════════════════════════════════════════════════════
+let activePhSlot=null;
+
+function bindAdminEditing(){
+  // Photo slots
+  document.querySelectorAll('.ph-slot[data-img]').forEach(slot=>{
+    slot.onclick=e=>{
+      if(!ADMIN)return;
+      e.stopPropagation();
+      activePhSlot=slot;
+      document.getElementById('phUpload').click();
+    };
+  });
+  // Editable text
+  document.querySelectorAll('[data-txt]').forEach(el=>{
+    el.classList.add('ed-text');
+    el.onclick=e=>{
+      if(!ADMIN)return;
+      e.stopPropagation();
+      const key=el.dataset.txt;
+      const current=el.innerHTML.replace(/<br\s*\/?>/gi,'\n');
+      const newVal=prompt('Edit content:',current);
+      if(newVal!==null&&newVal!==current){
+        el.innerHTML=newVal.replace(/\n/g,'<br>');
+        saveSiteContent(key,newVal);
+        flash('Content updated');
+      }
+    };
+  });
+}
+
+document.getElementById('phUpload').onchange=async function(){
+  if(!activePhSlot||!this.files[0])return;
+  const file=this.files[0];
+  const key=activePhSlot.dataset.img;
+
+  // Convert to base64 data URL for immediate display + storage
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    const dataUrl=e.target.result;
+    // Display immediately
+    activePhSlot.innerHTML=`<img src="${dataUrl}" alt="${key}">`;
+    // Save to Supabase + local
+    saveSiteContent('img_'+key,dataUrl);
+    flash('Photo saved');
+    activePhSlot=null;
+  };
+  reader.readAsDataURL(file);
+  this.value='';
+};
+
+// ════════════════════════════════════════════════════
+// ADMIN: Site Content Persistence (Supabase-backed)
+// ════════════════════════════════════════════════════
+async function saveSiteContent(key,value){
+  // Local cache always
+  const sc=LC.get('site_content')||{};
+  sc[key]=value;
+  LC.set('site_content',sc);
+  // Supabase: store in yt_site_content if table exists
+  if(DB_OK){
+    try{
+      // Upsert via DELETE then INSERT (works without UPSERT)
+      await supa.del('yt_site_content','key=eq.'+encodeURIComponent(key));
+      await supa.post('yt_site_content',{key,value});
+    }catch(e){console.log('Site content save fallback to local',e)}
+  }
+}
+
+async function loadSiteContent(){
+  let content={};
+  // Try Supabase first
+  if(DB_OK){
+    try{
+      const r=await supa.get('yt_site_content','select=key,value');
+      if(r&&r.length)r.forEach(row=>content[row.key]=row.value);
+    }catch{}
+  }
+  // Merge with local (Supabase wins)
+  const local=LC.get('site_content')||{};
+  content={...local,...content};
+  LC.set('site_content',content);
+
+  // Apply images
+  Object.entries(content).forEach(([k,v])=>{
+    if(k.startsWith('img_')){
+      const imgKey=k.replace('img_','');
+      const slot=document.querySelector(`.ph-slot[data-img="${imgKey}"]`);
+      if(slot&&v)slot.innerHTML=`<img src="${v}" alt="${imgKey}">`;
+    }else{
+      const el=document.querySelector(`[data-txt="${k}"]`);
+      if(el&&v)el.innerHTML=v.replace(/\n/g,'<br>');
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+async function initAll(){
+  await loadFavs();
+  renderNiches(NICHES);
+  renderSEO();
+  await renderCal();
+  renderGuer();
+  await renderSavedBriefs();
+  await loadSiteContent();
+  // Show admin key after login
+  document.getElementById('aKeyBtn').style.display='flex';
+  // Load last brief if exists
+  if(DB_OK&&ME){
+    const r=await supa.get('yt_briefs','user_id=eq.'+ME.id+'&select=topic,brief_data&order=created_at.desc&limit=1');
+    if(r&&r.length)renderBrief(r[0].topic,r[0].brief_data);
+  }else{
+    const local=LC.get('briefs')||[];
+    if(local.length)renderBrief(local[0].topic,local[0].brief);
+  }
+}
+</script>
+</body>
+</html>
